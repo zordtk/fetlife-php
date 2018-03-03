@@ -43,9 +43,10 @@ class Client
     private $mLogger            = null;
     private $mDecodeOnReturn    = true;
 
-    public function __constructor($decodeJsonOnReturn = true)
+    public function __constructor($decodeJsonOnReturn = true, $accessToken = null)
     {
-        $this->mDecodeOnReturn = $decodeOnReturn;
+        $this->mDecodeOnReturn  = $decodeOnReturn;
+        $this->mAccessToken     = $accessToken;
     }
 
     public function getMe()
@@ -439,6 +440,11 @@ class Client
             throw($e->getMessage());
             return false;
         }
+    }
+
+    public function getAccessToken()
+    {
+        return $this->mAccessToken;
     }
 }
 
