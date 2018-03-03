@@ -1,6 +1,8 @@
 Fetlife API for PHP
 ===================
 
+[![Build Status](https://travis-ci.org/zordtk/fetlife-php.png?branch=master)](https://travis-ci.org/zordtk/fetlife-php)
+
 Overview
 --------
 This library is a implementation of Fetlife's API in PHP. It's based on
