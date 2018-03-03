@@ -1,0 +1,21 @@
+{
+    "name": "zordtk/fetlife-php",
+    "type": "library",
+    "description": "Fetlife API",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jeremy Harmon",
+            "email": "jeremy.harmon@zoho.com",
+            "homepage": "https://github.com/zordtk"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Zordtk\\Fetlife\\": "src/"
+        }
+    },
+    "require": {
+        "league/oauth2-client": "^2.3"
+    }
+}
