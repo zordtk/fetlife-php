@@ -9,7 +9,9 @@ Fetlife's open-source Android client.
 TODO
 ----
 I do plan to encapsulate each data type (user profile, event, message, etc) into
-it's own object, but that will be in the future.
+it's own object, but that will be in the future. 
+
+Uploading of videos and pictures are not supported yet.
 
 License
 -------
