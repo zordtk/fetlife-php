@@ -1,7 +1,5 @@
-Fetlife API for PHP
+Fetlife API for PHP [![Build Status](https://travis-ci.org/zordtk/fetlife-php.png?branch=master)](https://travis-ci.org/zordtk/fetlife-php)
 ===================
-
-[![Build Status](https://travis-ci.org/zordtk/fetlife-php.png?branch=master)](https://travis-ci.org/zordtk/fetlife-php)
 
 Overview
 --------
