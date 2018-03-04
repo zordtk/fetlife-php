@@ -16,6 +16,7 @@
         }
     },
     "require": {
-        "league/oauth2-client": "^2.3"
+        "league/oauth2-client": "^2.3",        
+        "guzzlehttp/guzzle": "^6.0"        
     }
 }
