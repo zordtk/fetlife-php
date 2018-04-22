@@ -38,6 +38,8 @@ define('MAX_PAGE_LIMIT',                        25);
 // so we will just fake the http library that the official android client users.
 define('USER_AGENT',                            'okhttp/3.10.0');
 
+class LoginError extends \Exception { }
+
 class Client
 {
     const API_BASE_URI          = "https://app.fetlife.com";
@@ -498,7 +500,7 @@ class Client
         }
         catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e)
         {
-            throw($e->getMessage());
+            throw(new \Zordtk\Fetlife\API\LoginError('Invalid username or password'));
             return false;
         }
     }
