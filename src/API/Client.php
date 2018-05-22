@@ -51,7 +51,7 @@ class Client
 
     public function __constructor($decodeJsonOnReturn = true, $accessToken = null)
     {
-        $this->mDecodeOnReturn  = $decodeOnReturn;
+        $this->mDecodeOnReturn  = $decodeJsonOnReturn;
         $this->mAccessToken     = $accessToken;
     }
 
