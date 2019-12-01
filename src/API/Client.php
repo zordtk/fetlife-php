@@ -24,6 +24,9 @@
 
 namespace Zordtk\Fetlife\API;
 
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use League\OAuth2\Client\Provider\GenericProvider;
+
 define('PARAM_SORT_ORDER_UPDATED_DESC',         '-updated_at');
 define('PARAM_VALUE_FRIEND_REQUEST_SENT',       'sent');
 define('PARAM_VALUE_FRIEND_REQUEST_RECEIVED',   'received');
@@ -37,8 +40,6 @@ define('MAX_PAGE_LIMIT',                        25);
 // It seems that Fetlife started blocking requests with curl in the user-agent,
 // so we will just fake the http library that the official android client users.
 define('USER_AGENT',                            'okhttp/3.10.0');
-
-class LoginError extends \Exception { }
 
 class Client
 {
@@ -57,7 +58,7 @@ class Client
 
     public function getMe()
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/me');
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -65,7 +66,7 @@ class Client
 
     public function getMemberGroupMemberships($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/memberships", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -73,7 +74,7 @@ class Client
 
     public function getConversations($orderBy=PARAM_SORT_ORDER_UPDATED_DESC, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/me/conversations', ['query' => ['order_by' => $orderBy, 'limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -81,7 +82,7 @@ class Client
 
     public function getConversation($conversationId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/me/conversations/${conversationId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -89,7 +90,7 @@ class Client
 
     public function getFriends($limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/me/friends', ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -97,7 +98,7 @@ class Client
 
     public function getMessages($conversationId, $sinceMessageId, $untilMessageId, $limit=MAX_PAGE_LIMIT)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/me/conversations/${conversationId}/messages",
                                 ['query' => ['since_id' => $sinceMessageId, 'until_id' => $untilMessageId, 'limit' => $limit]]);
@@ -106,7 +107,7 @@ class Client
 
     public function searchMembers($query, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/search/members', ['query' => ['query' => $query, 'limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -114,7 +115,7 @@ class Client
 
     public function searchGroups($query, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/search/groups', ['query' => ['query' => $query, 'limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -122,7 +123,7 @@ class Client
 
     public function getGroupMembers($groupId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/groups/${groupId}/memberships", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -130,7 +131,7 @@ class Client
 
     public function getGroupDiscussions($groupId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/groups/${groupId}/posts", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -138,7 +139,7 @@ class Client
 
     public function getGroupDiscussion($groupId, $groupPostId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/groups/${groupId}/posts/${groupPostId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -146,7 +147,7 @@ class Client
 
     public function getGroupMessages($groupId, $groupPostId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/groups/${groupId}/posts/${groupPostId}/comments", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -154,7 +155,7 @@ class Client
 
     public function postGroupMessage($groupId, $groupPostId, $body)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->request('POST', self::API_BASE_URI . "/api/v2/groups/${groupId}/posts/${groupPostId}/comments", ['form_params' => ['body' => $body]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -162,7 +163,7 @@ class Client
 
     public function getMember($memberId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -170,7 +171,7 @@ class Client
 
     public function getEvent($eventId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/events/${eventId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -178,7 +179,7 @@ class Client
 
     public function getGroup($groupId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/groups/${groupId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -186,7 +187,7 @@ class Client
 
     public function joinGroup($groupId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->put(self::API_BASE_URI . "/api/v2/groups/${groupId}/join");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -194,7 +195,7 @@ class Client
 
     public function leaveGroup($groupId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->delete(self::API_BASE_URI . "/api/v2/groups/${groupId}/join");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -202,7 +203,7 @@ class Client
 
     public function followDiscussion($groupId, $groupPostId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->put(self::API_BASE_URI . "/api/v2/groups/${groupId}/posts/${groupPostId}/follow");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -210,7 +211,7 @@ class Client
 
     public function unfollowDiscussion($groupId, $groupPostId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->delete(self::API_BASE_URI . "/api/v2/groups/${groupId}/posts/${groupPostId}/follow");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -218,7 +219,7 @@ class Client
 
     public function getRsvps($eventId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/me/rsvps', ['query' => ['event_id' => $eventId]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -226,7 +227,7 @@ class Client
 
     public function getMemberFeed($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/latest_activity", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -234,7 +235,7 @@ class Client
 
     public function getMemberRelationship($memberId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/relationships");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -242,7 +243,7 @@ class Client
 
     public function getMemberPictures($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/pictures", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -250,7 +251,7 @@ class Client
 
     public function getMemberVideos($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/videos", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -258,7 +259,7 @@ class Client
 
     public function getMemberFriends($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/friends", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -266,7 +267,7 @@ class Client
 
     public function getMemberFollowers($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/followers", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -274,7 +275,7 @@ class Client
 
     public function getMemberFollowees($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/following", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -282,7 +283,7 @@ class Client
 
     public function getMemberStatuses($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/statuses", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -290,7 +291,7 @@ class Client
 
     public function getMemberRsvps($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/rsvps", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -298,7 +299,7 @@ class Client
 
     public function getWriting($memberId, $writingId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/writings/${writingId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -306,7 +307,7 @@ class Client
 
     public function getMemberWritings($memberId, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/members/${memberId}/writings", ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -314,7 +315,7 @@ class Client
 
     public function getEventRsvps($eventId, $status, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . "/api/v2/events/${eventId}/rsvps", ['query' => ['status' => $status, 'limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -322,7 +323,7 @@ class Client
 
     public function postMessage($conversationId, $message)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->request('POST', self::API_BASE_URI . "/api/v2/me/conversations/${conversationId}/messages", ['form_params' => ['body' => $message]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -330,7 +331,7 @@ class Client
 
     public function setMessagesRead($conversationId, $ids)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->put(self::API_BASE_URI . "/api/v2/me/conversations/${conversationId}/messages/read", ['form_params' => ['ids' => $ids]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -338,7 +339,7 @@ class Client
 
     public function postConversation($userId, $subject, $message)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->request('POST', self::API_BASE_URI . "/api/v2/me/conversations", ['form_params' => ['user_id' => $userId, 'subject' => $subject, 'body' => $message]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -346,7 +347,7 @@ class Client
 
     public function getFriendRequests($filter, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/me/friendrequests', ['query' => ['filter' => $filter, 'limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -354,7 +355,7 @@ class Client
 
     public function acceptFriendRequest($friendRequestId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->put(self::API_BASE_URI . "/api/v2/me/friendrequests/${friendRequestId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -362,7 +363,7 @@ class Client
 
     public function cancelFriendRequest($friendRequestId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->delete(self::API_BASE_URI . "/api/v2/me/friendrequests/${friendRequestId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -370,7 +371,7 @@ class Client
 
     public function createFriendRequest($friendId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->request('POST', self::API_BASE_URI . '/api/v2/me/friendrequests', ['form_params' => ['member_id' => $friendId]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -378,7 +379,7 @@ class Client
 
     public function createFollow($memberId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->put(self::API_BASE_URI . "/api/v2/members/${memberId}/follow");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -386,7 +387,7 @@ class Client
 
     public function removeFollow($memberId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->delete(self::API_BASE_URI . "/api/v2/members/${memberId}/follow");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -394,7 +395,7 @@ class Client
 
     public function removeFriendship($memberId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->delete(self::API_BASE_URI . "/api/v2/me/relations/${memberId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -402,7 +403,7 @@ class Client
 
     public function getFeed($limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/me/feed', ['query' => ['limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -410,7 +411,7 @@ class Client
 
     public function getStuffYouLove($timeStamp=null, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/explore/stuff-you-love', ['query' => ['marker' => $timeStamp, 'limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -418,7 +419,7 @@ class Client
 
     public function getKinkyAndPopular($timeStamp=null, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/explore/fresh-and-pervy', ['query' => ['until' => $timeStamp, 'limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -426,7 +427,7 @@ class Client
 
     public function putLove($contentType, $contentId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->put(self::API_BASE_URI . "/api/v2/me/loves/${contentType}/${contentId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -434,7 +435,7 @@ class Client
 
     public function putRsvps($eventId, $rsvpsType)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/me/rsvps', ['query' => ['event_id' => $eventId, 'status' => $rsvpsType]]);
         $json   = json_decode($res->getBody()->getContents());
@@ -442,7 +443,7 @@ class Client
 
     public function deleteLove($contentType, $contentId)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->delete(self::API_BASE_URI . "/api/v2/me/loves/${contentType}/${contentId}");
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -450,7 +451,7 @@ class Client
 
     public function searchEventsByLocation($latitude, $longitude, $range, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/search/events/by_location', ['query' => ['latitude' => $latitude, 'longitude' => $longitude, 'range' => $range, 'limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -458,7 +459,7 @@ class Client
 
     public function searchEvents($query, $limit=MAX_PAGE_LIMIT, $page=1)
     {
-        
+
         $client = new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT, 'Authorization' => self::AUTH_HEADER_PREFIX . $this->mAccessToken]]);
         $res    = $client->get(self::API_BASE_URI . '/api/v2/search/events', ['query' => ['query' => $query, 'limit' => $limit, 'page' => $page]]);
         return( $this->mDecodeOnReturn ? json_decode($res->getBody()->getContents()) : $res->getBody()->getContents() );
@@ -473,10 +474,10 @@ class Client
 
     public function login($username, $password)
     {
-       
+
         try
         {
-            $provider = new \League\OAuth2\Client\Provider\GenericProvider(
+            $provider = new GenericProvider(
                 [
                     'clientId'                  => CLIENT_ID,
                     'clientSecret'              => CLIENT_SECRET,
@@ -484,7 +485,7 @@ class Client
                     'urlAuthorize'              => '',
                     'urlAccessToken'            => self::API_BASE_URI . '/api/oauth/token',
                     'urlResourceOwnerDetails'   => ''
-                ], 
+                ],
                 [
                     'httpClient' => new \GuzzleHttp\Client(['headers' => ['User-Agent' => USER_AGENT]])
                 ]
@@ -498,10 +499,9 @@ class Client
             $this->mAccessToken = $accessToken->getToken();
             return true;
         }
-        catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e)
+        catch (IdentityProviderException $e)
         {
-            throw(new \Zordtk\Fetlife\API\LoginError('Invalid username or password'));
-            return false;
+            throw new LoginError('Invalid username or password');
         }
     }
 
